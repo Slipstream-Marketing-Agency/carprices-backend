@@ -9,7 +9,7 @@ const moment = require("moment");
 
 
 module.exports.createWebstory = asyncHandler(async (req, res, next) => {
-    let { mainTitle, storyType, metaTitle, metaDescription, slug, storyLanguage, slides, published, publishedAt } = req.body.webstory;
+    let { mainTitle, storyType, metaTitle, metaDescription, slug, storyLanguage, slides, published, publishedAt, url, urlName } = req.body.webstory;
 
 
     if (!slug) {
@@ -38,6 +38,8 @@ module.exports.createWebstory = asyncHandler(async (req, res, next) => {
             published,
             publishedAt,
             author: "Carprices",
+            url,
+            urlName
         });
 
         // Create associated Slide entries if slides are provided
@@ -148,7 +150,7 @@ module.exports.getWebStories = asyncHandler(async (req, res, next) => {
     let isAll = query.isAll ?? false;
     let pageSize = query.pageSize ?? 10;
     let currentPage = query.currentPage ?? 1;
-    let orderBy = query.orderBy ? [[query.orderBy, "ASC"]] : null;
+    let orderBy = query.orderBy ? [[query.orderBy, "ASC"]] : [['publishedAt', 'DESC']];
     let where = {};
 
     if (query.search) {
@@ -239,6 +241,46 @@ module.exports.getAdminWebstoryById = asyncHandler(async (req, res, next) => {
     }
 });
 
+module.exports.getWebstoryBySlug = asyncHandler(async (req, res, next) => {
+    const webstorySlug = req.params.slug;
+
+    try {
+        // Retrieve the WebStory with the provided slug
+        const webstory = await WebStory.findOne({
+            where: { slug: webstorySlug },
+            include: [{ model: Slide }],
+        });
+
+        if (!webstory) {
+            return res.status(404).json({ message: 'WebStory not found' });
+        }
+
+        return res.status(200).json({ webstory });
+    } catch (error) {
+        console.log('Error:', error.message);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+module.exports.getWebstoryById = asyncHandler(async (req, res, next) => {
+    const webstoryId = req.params.id;
+
+    try {
+        // Retrieve the WebStory with the provided ID
+        const webstory = await WebStory.findByPk(webstoryId, {
+            include: [{ model: Slide }],
+        });
+
+        if (!webstory) {
+            return res.status(404).json({ message: 'WebStory not found' });
+        }
+
+        return res.status(200).json({ webstory });
+    } catch (error) {
+        console.log('Error:', error.message);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+});
 
 
 

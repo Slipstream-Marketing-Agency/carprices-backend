@@ -62,6 +62,14 @@ const WebStory = sequelize.define("web_story", {
   author: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  url: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  urlName: {
+    type: DataTypes.STRING,
+    allowNull: false,
   }
 });
 
