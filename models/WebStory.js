@@ -21,7 +21,7 @@ const Slide = sequelize.define("slide", {
   theme: {
     type: DataTypes.STRING,
     allowNull: false,
-  },
+  }
 });
 
 
