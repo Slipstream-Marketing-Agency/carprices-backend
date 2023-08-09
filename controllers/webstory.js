@@ -24,8 +24,6 @@ module.exports.createWebstory = asyncHandler(async (req, res, next) => {
         publishedAt = null
     }
 
-
-
     try {
         // Create the WebStory entry
         const webstory = await WebStory.create({
@@ -39,7 +37,7 @@ module.exports.createWebstory = asyncHandler(async (req, res, next) => {
             publishedAt,
             author: "Carprices",
             url,
-            urlName
+            urlName,
         });
 
         // Create associated Slide entries if slides are provided
@@ -67,82 +65,64 @@ module.exports.createWebstory = asyncHandler(async (req, res, next) => {
 });
 
 module.exports.updateWebstory = asyncHandler(async (req, res, next) => {
-    const webstoryId = req.params.id;
-    const { mainTitle, storyType, metaTitle, metaDescription, slug, storyLanguage, slides, published } = req.body.webstory;
+    let webstoryId = req.params.id; // Assuming you can get the webstoryId from the route parameter
+    let { mainTitle, storyType, metaTitle, metaDescription, slug, storyLanguage, slides, published, url, urlName, publishedAt } = req.body.webstory;
 
     try {
-        // Check if the WebStory exists
-        const existingWebstory = await WebStory.findByPk(webstoryId);
-        if (!existingWebstory) {
+        let webstory = await WebStory.findByPk(webstoryId);
+
+        if (!webstory) {
             return res.status(404).json({ message: 'WebStory not found' });
         }
 
-        // Update the WebStory fields
-        existingWebstory.mainTitle = mainTitle;
-        existingWebstory.storyType = storyType;
-        existingWebstory.metaTitle = metaTitle;
-        existingWebstory.metaDescription = metaDescription;
+        // Update main story details
+        webstory.mainTitle = mainTitle;
+        webstory.storyType = storyType;
+        webstory.metaTitle = metaTitle;
+        webstory.metaDescription = metaDescription;
+        webstory.slug = slug || slugify(mainTitle, { lower: true });
+        webstory.storyLanguage = storyLanguage;
+        webstory.published = published;
+        webstory.publishedAt = publishedAt;
+        webstory.url = url;
+        webstory.urlName = urlName;
 
-        // If the slug is provided, update it
-        if (slug) {
-            existingWebstory.slug = slugify(slug, {
-                lower: true
-            });
+
+        let originalPublishedState = webstory.published;
+        publishedAt = webstory.publishedAt;
+
+        if (published !== originalPublishedState) {
+            publishedAt = published ? new Date() : null;
         }
 
-        existingWebstory.storyLanguage = storyLanguage;
-        existingWebstory.published = published;
-
-        // If published is true and no publishedAt date is set, set it to the current date
-        if (published && !existingWebstory.publishedAt) {
-            existingWebstory.publishedAt = new Date();
-        }
-
-        // If published is false, clear the publishedAt date
-        if (!published) {
-            existingWebstory.publishedAt = null;
-        }
-
-        // Save the updated WebStory
-        await existingWebstory.save();
-
-        // Update or create associated Slide entries if slides are provided
+        // Update or create associated Slide entries
         if (slides && slides.length > 0) {
-            for (const slide of slides) {
-                if (slide.id) {
-                    // If slide ID is provided, update the existing slide
-                    const existingSlide = await Slide.findByPk(slide.id);
-                    if (existingSlide) {
-                        existingSlide.title = slide.title;
-                        existingSlide.image1 = slide.image1;
-                        existingSlide.image2 = slide.image2;
-                        existingSlide.subtitle = slide.subtitle;
-                        existingSlide.theme = slide.theme;
-                        await existingSlide.save();
-                    }
-                } else {
-                    // If slide ID is not provided, create a new slide and associate it with the WebStory
-                    await Slide.create({
-                        title: slide.title,
-                        image1: slide.image1,
-                        image2: slide.image2,
-                        subtitle: slide.subtitle,
-                        theme: slide.theme,
-                        webStoryId: existingWebstory.id, // Associate slide with the existing web story
-                    });
-                }
-            }
+            await Slide.destroy({ where: { webStoryId: webstoryId } }); // Delete existing slides for the webstory
+
+            const slideEntries = slides.map((slide) => ({
+                title: slide.title,
+                image1: slide.image1,
+                image2: slide.image2,
+                subtitle: slide.subtitle,
+                theme: slide.theme,
+                webStoryId: webstory.id, // Associate slide with the webstory
+            }));
+
+            await Slide.bulkCreate(slideEntries);
         }
+
+        await webstory.save(); // Save the updated webstory
 
         // Clear webstory cache if needed
         await redisClient.del("webstory");
 
-        return res.status(200).json({ webstory: existingWebstory });
+        return res.status(200).json({ webstory });
     } catch (error) {
         console.log('Error:', error.message);
         return res.status(500).json({ message: 'Internal server error' });
     }
 });
+
 
 module.exports.getWebStories = asyncHandler(async (req, res, next) => {
     const { query } = req;
@@ -191,7 +171,7 @@ module.exports.getAdminWebStories = asyncHandler(async (req, res, next) => {
     let isAll = query.isAll ?? false;
     let pageSize = query.pageSize ?? 10;
     let currentPage = query.currentPage ?? 1;
-    let orderBy = query.orderBy ? [[query.orderBy, "ASC"]] : null;
+    let orderBy = query.orderBy ? [[query.orderBy, "ASC"]] : [['publishedAt', 'DESC']];
     let where = {};
 
     if (query.search) {
@@ -225,9 +205,10 @@ module.exports.getAdminWebstoryById = asyncHandler(async (req, res, next) => {
     const webstoryId = req.params.id;
 
     try {
-        // Retrieve the WebStory with the provided ID
+        // Retrieve the WebStory with the provided ID, including associated slides in the order of the 'order' field
         const webstory = await WebStory.findByPk(webstoryId, {
-            include: [{ model: Slide }],
+            include: [{ model: Slide, order: [['id', 'ASC']] }],
+            order: [[Slide, 'id', 'ASC']], // Order the web story's slides based on the 'order' field
         });
 
         if (!webstory) {
@@ -245,10 +226,11 @@ module.exports.getWebstoryBySlug = asyncHandler(async (req, res, next) => {
     const webstorySlug = req.params.slug;
 
     try {
-        // Retrieve the WebStory with the provided slug
+        // Retrieve the WebStory with the provided slug, including associated slides in the order of the 'order' field
         const webstory = await WebStory.findOne({
             where: { slug: webstorySlug },
-            include: [{ model: Slide }],
+            include: [{ model: Slide, order: [['id', 'ASC']] }],
+            order: [[Slide, 'id', 'ASC']], // Order the web story's slides based on the 'order' field
         });
 
         if (!webstory) {
@@ -262,13 +244,15 @@ module.exports.getWebstoryBySlug = asyncHandler(async (req, res, next) => {
     }
 });
 
+
 module.exports.getWebstoryById = asyncHandler(async (req, res, next) => {
     const webstoryId = req.params.id;
 
     try {
-        // Retrieve the WebStory with the provided ID
+        // Retrieve the WebStory with the provided ID, including associated slides in the order of the 'order' field
         const webstory = await WebStory.findByPk(webstoryId, {
-            include: [{ model: Slide }],
+            include: [{ model: Slide, order: [['id', 'ASC']] }],
+            order: [[Slide, 'id', 'ASC']], // Order the web story's slides based on the 'order' field
         });
 
         if (!webstory) {
