@@ -3811,10 +3811,79 @@ module.exports.getTrimsBrandPageProperties = asyncHandler(async (req, res, next)
         maxPowerTrim.model = model;
     }
 
+    let mostFuelEfficientTrim = await Trim.findOne({
+        where: {
+            ...where,
+            fuelConsumption: {
+                [Op.not]: null,
+                [Op.ne]: '' // Exclude blank values as well
+            }
+        },
+        order: [["fuelConsumption", "ASC"]],
+        attributes: ["model", "price", "fuelConsumption", "year", "slug", "name"],
+        raw: true,
+    });
+
+    // Retrieve the associated Model for the mostFuelEfficientTrim
+    if (mostFuelEfficientTrim && mostFuelEfficientTrim.model) {
+        let modelId = mostFuelEfficientTrim.model;
+        let model = await Model.findByPk(modelId, {
+            attributes: ["id", "name", "slug", "year"],
+        });
+        mostFuelEfficientTrim.model = model;
+    }
+
+    let fastestTrim = await Trim.findOne({
+        where: {
+            ...where,
+            zeroToHundred: {
+                [Op.not]: null,
+                [Op.ne]: '' // Exclude blank values as well
+            }
+        },
+        order: [["zeroToHundred", "DESC"]],
+        attributes: ["model", "price", "engine", "zeroToHundred", "topSpeed", "year", "slug", "name"],
+        raw: true,
+    });
+
+    // Retrieve the associated Model for the fastestTrim
+    if (fastestTrim && fastestTrim.model) {
+        let modelId = fastestTrim.model;
+        let model = await Model.findByPk(modelId, {
+            attributes: ["id", "name", "slug", "year"],
+        });
+        fastestTrim.model = model;
+    }
+
+
+    let electricOrHybrid = await Trim.findAll({
+        where: {
+            ...where,
+            fuelType: {
+                [Op.or]: ["Electric", "Hybrid"]
+            }
+        },
+        group: ['model'],
+        attributes: ["model"],
+        raw: true,
+    });
+    
+
+    // Retrieve the associated Model for the fastestTrim
+    for (let trim of electricOrHybrid) {
+            let modelId = trim.model;
+            let model = await Model.findByPk(modelId, {
+                attributes: ["id", "name", "slug", "year"],
+            });
+            trim.model = model;
+    }
+
+
     res
         .status(200)
-        .json({trimsCount: trims.count, totalPage: Math.ceil(trims.count / pageSize), bodyTypeCounts: bodyTypeCounts, minPriceTrim: minPriceTrim,
-            maxPriceTrim: maxPriceTrim, maxPowerTrim: maxPowerTrim
+        .json({
+            trimsCount: trims.count, totalPage: Math.ceil(trims.count / pageSize), bodyTypeCounts: bodyTypeCounts, minPriceTrim: minPriceTrim,
+            maxPriceTrim: maxPriceTrim, maxPowerTrim: maxPowerTrim, mostFuelEfficientTrim: mostFuelEfficientTrim, fastestTrim: fastestTrim, electricOrHybrid: electricOrHybrid
         });
 });
 
