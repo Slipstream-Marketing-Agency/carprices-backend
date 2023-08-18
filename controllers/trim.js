@@ -12,6 +12,7 @@ const TrimImages = require("../models/TrimImages");
 const Trim = require("../models/Trim");
 const TrimVideos = require("../models/TrimVideo");
 const aws = require("../util/aws");
+const sequelize = require("../util/database");
 
 module.exports.createTrim = asyncHandler(async (req, res, next) => {
     const {
@@ -3819,7 +3820,9 @@ module.exports.getTrimsBrandPageProperties = asyncHandler(async (req, res, next)
                 [Op.ne]: '' // Exclude blank values as well
             }
         },
-        order: [["fuelConsumption", "ASC"]],
+        order: [
+            [sequelize.literal('CAST("fuelConsumption" AS DECIMAL)'), 'DESC']
+        ],
         attributes: ["model", "price", "fuelConsumption", "year", "slug", "name"],
         raw: true,
     });
@@ -3841,11 +3844,13 @@ module.exports.getTrimsBrandPageProperties = asyncHandler(async (req, res, next)
                 [Op.ne]: '' // Exclude blank values as well
             }
         },
-        order: [["zeroToHundred", "DESC"]],
+        order: [
+            [sequelize.literal('CAST("zeroToHundred" AS DECIMAL)'), 'ASC']
+        ],
         attributes: ["model", "price", "engine", "zeroToHundred", "topSpeed", "year", "slug", "name"],
         raw: true,
     });
-
+    
     // Retrieve the associated Model for the fastestTrim
     if (fastestTrim && fastestTrim.model) {
         let modelId = fastestTrim.model;
@@ -3854,6 +3859,7 @@ module.exports.getTrimsBrandPageProperties = asyncHandler(async (req, res, next)
         });
         fastestTrim.model = model;
     }
+    
 
 
     let electricOrHybrid = await Trim.findAll({
@@ -3867,15 +3873,15 @@ module.exports.getTrimsBrandPageProperties = asyncHandler(async (req, res, next)
         attributes: ["model"],
         raw: true,
     });
-    
+
 
     // Retrieve the associated Model for the fastestTrim
     for (let trim of electricOrHybrid) {
-            let modelId = trim.model;
-            let model = await Model.findByPk(modelId, {
-                attributes: ["id", "name", "slug", "year"],
-            });
-            trim.model = model;
+        let modelId = trim.model;
+        let model = await Model.findByPk(modelId, {
+            attributes: ["id", "name", "slug", "year"],
+        });
+        trim.model = model;
     }
 
 
