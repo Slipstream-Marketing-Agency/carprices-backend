@@ -2031,7 +2031,7 @@ module.exports.getTrimsByFilter = asyncHandler(async (req, res, next) => {
 
 module.exports.getTrimsBodyType = asyncHandler(async (req, res, next) => {
 
-    let bodyType = await Trim.findAll({
+    let bodyTypeData = await Trim.findAll({
         attributes: ['bodyType'],
         group: ['bodyType'],
         where: {
@@ -2040,7 +2040,22 @@ module.exports.getTrimsBodyType = asyncHandler(async (req, res, next) => {
         }
     });
 
-    bodyType = bodyType.map(item => item.bodyType)
+    // Extract and slugify the bodyType values
+    const bodyType = bodyTypeData.map(item => {
+        if (typeof item.bodyType === 'string') {
+            return {
+                original: item.bodyType,
+                slugified: slugify(item.bodyType, { lower: true })
+            };
+        }
+        // Handle null or undefined values by returning a default
+        return {
+            original: '',
+            slugified: ''
+        };
+    });
+
+    // bodyType = bodyType.map(item => item.bodyType)
 
     res
         .status(200)
@@ -2981,22 +2996,6 @@ module.exports.getTrimsByAdvancedSearch = asyncHandler(async (req, res, next) =>
         })
     }
 
-    // if (body.min) {
-    //     where.price = {
-    //         // ...where.price,
-    //         [Op.gte]: body.min
-    //     }
-    // }
-
-    // if (body.max) {
-    //     where.price = {
-    //         ...where.price,
-    //         [Op.lte]: body.max
-    //     }
-    // }else{
-    //     delete where.price;
-    // }
-
     if (body.power && body.power.length != 0) {
         where.power = {}
         body.power.map(power => {
@@ -3021,27 +3020,31 @@ module.exports.getTrimsByAdvancedSearch = asyncHandler(async (req, res, next) =>
         })
     }
 
+    const brandSlugs = body.brand; // This should be an array of brand slugs
 
-
-    // where.power = {}
-
-    // if (body.minPower) {
-    //     where.power = {
-    //         ...where.power,
-    //         [Op.gte]: String(body.minPower)
-    //     }
-    // }
-
-    // if (body.maxPower) {
-    //     where.power = {
-    //         ...where.power,
-    //         [Op.lte]: String(body.maxPower)
-    //     }
-    // }
-
-    if (body.brand && body.brand.length != 0) {
-        where.brand = body.brand
+    // Initialize an empty array to store brand IDs
+    const brandIds = [];
+    
+    // Iterate over brand slugs and find the corresponding IDs
+    for (const slug of brandSlugs) {
+        const brand = await CarBrand.findOne({
+            attributes: ['id'],
+            where: { slug }
+        });
+        
+        if (brand) {
+            brandIds.push(brand.id);
+        }
     }
+    
+    // Now, use `brandIds` for filtering related data
+    if (brandIds && brandIds.length !== 0) {
+        where.brand = brandIds;
+    }
+
+    // if (body.brand && body.brand.length != 0) {
+    //     where.brand = body.brand
+    // }
 
     if (body.bodyType && body.bodyType.length != 0) {
         where.bodyType = body.bodyType
