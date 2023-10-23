@@ -1080,6 +1080,11 @@ module.exports.getBlogBySlug = asyncHandler(async (req, res, next) => {
 
     const blog = await Blog.findOne({ where, raw: true });
 
+    // Check if the blog exists
+    if (!blog) {
+        return res.status(404).json({ message: "Blog not found" });
+    }
+
 
     blog.brands = await BlogBrand.findAll({
         where: {
