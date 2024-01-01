@@ -934,7 +934,7 @@ module.exports.getTrimMinMaxFilterPrice = asyncHandler(async (req, res, next) =>
     const { query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -1034,7 +1034,7 @@ module.exports.getTrimMinMaxFilterPriceDynamic = asyncHandler(async (req, res, n
     const { query, body } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -1192,7 +1192,7 @@ module.exports.getTrimMinMaxFilterPower = asyncHandler(async (req, res, next) =>
     const { query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -1217,7 +1217,7 @@ module.exports.getTrimMinMaxFilterPowerDynamic = asyncHandler(async (req, res, n
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -1374,7 +1374,7 @@ module.exports.getTrimMinMaxFilterTorque = asyncHandler(async (req, res, next) =
     const { query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -1399,7 +1399,7 @@ module.exports.getTrimMinMaxFilterTorqueDynamic = asyncHandler(async (req, res, 
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -1556,7 +1556,7 @@ module.exports.getTrimMinMaxFilterDisplacement = asyncHandler(async (req, res, n
     const { query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -1581,7 +1581,7 @@ module.exports.getTrimMinMaxFilterDisplacementDynamic = asyncHandler(async (req,
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -1844,12 +1844,12 @@ module.exports.getTrimsByFilter = asyncHandler(async (req, res, next) => {
     if (query.search) {
         where.name = { [Op.iLike]: `%${query.search}%` }
     }
-    where.year = { [Op.gte]: new Date().getFullYear() }
+    where.year = { [Op.gte]: 2023 }
 
     let conditions = {
         attributes: [[Sequelize.fn('DISTINCT', Sequelize.col("model")), "model"]],
         where: {
-            year: { [Op.gte]: new Date().getFullYear() },
+            year: { [Op.gte]: 2023 },
             published: true
         },
         raw: true
@@ -2035,7 +2035,7 @@ module.exports.getTrimsBodyType = asyncHandler(async (req, res, next) => {
         attributes: ['bodyType'],
         group: ['bodyType'],
         where: {
-            year: { [Op.gte]: new Date().getFullYear() },
+            year: { [Op.gte]: 2023 },
             published: true
         }
     });
@@ -2067,7 +2067,7 @@ module.exports.getTrimsBodyTypeDynamic = asyncHandler(async (req, res, next) => 
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -2222,7 +2222,7 @@ module.exports.getTrimsFuelType = asyncHandler(async (req, res, next) => {
         attributes: ['fuelType'],
         group: ['fuelType'],
         where: {
-            year: { [Op.gte]: new Date().getFullYear() },
+            year: { [Op.gte]: 2023 },
             published: true
         }
     });
@@ -2239,7 +2239,7 @@ module.exports.getTrimsFuelTypeDynamic = asyncHandler(async (req, res, next) => 
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -2394,7 +2394,7 @@ module.exports.getTrimsTransmissions = asyncHandler(async (req, res, next) => {
         attributes: ['transmission'],
         group: ['transmission'],
         where: {
-            year: { [Op.gte]: new Date().getFullYear() },
+            year: { [Op.gte]: 2023 },
             published: true
         }
     });
@@ -2411,7 +2411,7 @@ module.exports.getTrimsTransmissionsDynamic = asyncHandler(async (req, res, next
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -2566,7 +2566,7 @@ module.exports.getTrimsCylinderNo = asyncHandler(async (req, res, next) => {
         attributes: ['cylinders'],
         group: ['cylinders'],
         where: {
-            year: { [Op.gte]: new Date().getFullYear() },
+            year: { [Op.gte]: 2023 },
             published: true
         }
     });
@@ -2583,7 +2583,7 @@ module.exports.getTrimsCylinderNoDynamic = asyncHandler(async (req, res, next) =
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -2738,7 +2738,7 @@ module.exports.getTrimsDriveType = asyncHandler(async (req, res, next) => {
         attributes: ['drive'],
         group: ['drive'],
         where: {
-            year: { [Op.gte]: new Date().getFullYear() },
+            year: { [Op.gte]: 2023 },
             published: true
         }
     });
@@ -2755,7 +2755,7 @@ module.exports.getTrimsDriveTypeDynamic = asyncHandler(async (req, res, next) =>
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -2909,7 +2909,7 @@ module.exports.getTrimsByAdvancedSearch = asyncHandler(async (req, res, next) =>
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -3363,7 +3363,7 @@ module.exports.getTrimsBrandPageProperties = asyncHandler(async (req, res, next)
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 
@@ -3902,7 +3902,7 @@ module.exports.getCarBrandsDynamic = asyncHandler(async (req, res, next) => {
     const { body, query } = req;
 
     let where = {
-        year: { [Op.gte]: new Date().getFullYear() },
+        year: { [Op.gte]: 2023 },
         published: true
     };
 

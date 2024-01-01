@@ -319,7 +319,7 @@ module.exports.getModels = asyncHandler(async (req, res, next) => {
     ] : null;
     let where = {
         published: true,
-        year: { [Op.gte]: new Date().getFullYear() }
+        year: { [Op.gte]: 2023 }
     };
     if (query.search) {
         where.name = { [Op.iLike]: `%${query.search}%` }
@@ -530,7 +530,7 @@ module.exports.searchModels = asyncHandler(async (req, res, next) => {
     ] : null;
     let where = {
         published: true,
-        year: { [Op.gte]: new Date().getFullYear() }
+        year: { [Op.gte]: 2023 }
     };
     if (query.search) {
         where.name = { [Op.iLike]: `%${query.search}%` }
